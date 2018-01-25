@@ -3,6 +3,8 @@ name = "openh264-sys"
 version = "0.0.1"
 authors = ["Isamu Mogi"]
 build = "build.rs"
+description = "Bindings to openh264"
+license = "BSD-2-Clause"
 
 [features]
 # Download and build openh264 source
