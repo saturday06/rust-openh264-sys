@@ -5,6 +5,8 @@ authors = ["Isamu Mogi"]
 build = "build.rs"
 description = "Bindings to openh264"
 license = "BSD-2-Clause"
+readme = "README.md"
+repository = "https://github.com/saturday06/rust-openh264"
 
 [features]
 # Download and build openh264 source
