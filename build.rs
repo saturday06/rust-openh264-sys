@@ -151,14 +151,12 @@ fn find_make() -> Option<String> {
         .map(|s| s.to_string())
 }
 
-#[cfg(windows)]
-fn make_unix_path(windows_path_str: &str) -> String {
-    windows_path_str.replace("\\", "/")
-}
-
-#[cfg(not(windows))]
 fn make_unix_path(path_str: &str) -> String {
-    path_str.to_owned()
+    if cfg!(windows) {
+        path_str.replace("\\", "/")
+    } else {
+        path_str.to_owned()
+    }
 }
 
 fn build_library(out_dir_path: &Path, version: &str, dynamic: bool) -> Library {
@@ -377,27 +375,16 @@ fn download_library(out_dir_path: &Path, full_version: &str, major_version: &str
         .write_all(&so_vec)
         .expect(&format!("Failed to save prebuilt binary to {:?}", so_path));
 
-    if full_version_so_name != major_version_so_name {
-        let link_path = prefix_lib_dir_path.join(&major_version_so_name);
-        #[cfg(unix)]
-        {
-            std::os::unix::fs::symlink(&so_path, &link_path).expect(&format!(
-                "Failed to create symlink target: {:?}, linkname: {:?}",
-                so_path, link_path
-            ));
+    for &(target_so_name, link_so_name) in [
+        (&full_version_so_name, &major_version_so_name),
+        (&major_version_so_name, &short_so_name),
+    ].iter()
+    {
+        if target_so_name == link_so_name {
+            continue;
         }
-        #[cfg(not(unix))]
-        {
-            panic!(
-                "Internal logic error: Using symlink on non-unix target: {:?}, linkname: {:?}",
-                so_path, link_path
-            );
-        }
-    }
-
-    if major_version_so_name != short_so_name {
-        let target_path = prefix_lib_dir_path.join(&major_version_so_name);
-        let link_path = prefix_lib_dir_path.join(short_so_name);
+        let target_path = prefix_lib_dir_path.join(target_so_name);
+        let link_path = prefix_lib_dir_path.join(link_so_name);
         #[cfg(unix)]
         {
             std::os::unix::fs::symlink(&target_path, &link_path).expect(&format!(
