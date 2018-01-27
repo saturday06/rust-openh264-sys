@@ -27,3 +27,7 @@ glob = "0.2.11"
 pkg-config = "0.3.9"
 url = "1.6.0"
 bzip2 = "0.3.2"
+
+[badges]
+travis-ci = { repository = "saturday06/rust-openh264" }
+appveyor = { repository = "saturday06/rust-openh264" }
