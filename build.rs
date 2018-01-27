@@ -97,12 +97,15 @@ fn extract_source(out_dir_path: &Path, version: &str) -> String {
             tar_extract_dir_path.clone()
         ));
     }
-    for entry_result in tar_archive.entries().unwrap() {
-        let mut entry = entry_result.expect(&format!(
-            "Failed to extract tar archive entry in {:?}",
-            archive_file_path
-        ));
+    for mut entry in tar_archive.entries().expect(&format!(
+        "Failed to read tar archive entries in {:?}",
+        archive_file_path
+    )) {
         entry
+            .expect(&format!(
+                "Failed to extract tar archive entry in {:?}",
+                archive_file_path
+            ))
             .unpack_in(tar_extract_dir_path.clone())
             .expect(&format!(
                 "Failed to unpack file in {:?} for {:?}",
@@ -111,22 +114,21 @@ fn extract_source(out_dir_path: &Path, version: &str) -> String {
             ));
     }
 
-    let mut openh264_src_dir_path_option = None;
-    for entry_result in std::fs::read_dir(tar_extract_dir_path.clone())
+    let openh264_src_dir_path_option = std::fs::read_dir(&tar_extract_dir_path)
         .expect(&format!("Failed to read dir {:?}", tar_extract_dir_path))
-    {
-        let entry = entry_result.expect(&format!(
-            "Failed to read dir entry in {:?}",
-            tar_extract_dir_path
-        ));
-        let file_type = entry.file_type().expect(&format!(
-            "Failed to read file type for {:?} in {:?}",
-            entry, tar_extract_dir_path
-        ));
-        if file_type.is_dir() {
-            openh264_src_dir_path_option = Some(tar_extract_dir_path.join(entry.path()));
-        }
-    }
+        .find(|entry| {
+            entry
+                .expect(&format!(
+                    "Failed to read dir entry in {:?}",
+                    tar_extract_dir_path
+                ))
+                .file_type()
+                .expect(&format!(
+                    "Failed to read file type for {:?} in {:?}",
+                    entry, tar_extract_dir_path
+                ))
+                .is_dir()
+        });
 
     let openh264_src_dir_path = openh264_src_dir_path_option.expect(
         &format!("Failed to find openh264 extracted src path in {:?}, perhaps downloaded archive {:?} was broken.", 
