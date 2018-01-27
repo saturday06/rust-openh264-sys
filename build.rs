@@ -223,31 +223,11 @@ fn build_library(out_dir_path: &Path, version: &str, dynamic: bool) -> Library {
     library
 }
 
-fn download_library(out_dir_path: &Path, full_version: &str, major_version: &str) -> Library {
-    let mut library = Library {
-        dynamic: true,
-        libs: vec!["openh264".to_owned()],
-        link_paths: Vec::new(),
-        frameworks: Vec::new(),
-        framework_paths: Vec::new(),
-        include_paths: Vec::new(),
-    };
-
-    let prefix_dir_path = out_dir_path.join("prefix");
-    let prefix_include_dir_path = prefix_dir_path.join("include");
-    let prefix_lib_dir_path = prefix_dir_path.join("lib");
-
-    library.include_paths.push(prefix_include_dir_path.clone());
-    library.link_paths.push(prefix_lib_dir_path.clone());
-
-    let done_file_path = prefix_dir_path.join("download_done");
-    if done_file_path.exists() {
-        return library;
-    }
-
-    let (archive_file_name, full_version_so_name, major_version_so_name, short_so_name) = if cfg!(
-        target_os = "android"
-    ) {
+fn find_prebuilt_library(
+    full_version: &str,
+    major_version: &str,
+) -> (String, String, String, String) {
+    if cfg!(target_os = "android") {
         (
             format!("libopenh264-{}-android19.so.bz2", full_version),
             format!("libopenh264.so"),
@@ -310,7 +290,33 @@ fn download_library(out_dir_path: &Path, full_version: &str, major_version: &str
         )
     } else {
         panic!("Prebuilt binary is not found in github releases. Please install libopenh264 manually or enable `build' cargo feature to build from source.");
+    }
+}
+
+fn download_library(out_dir_path: &Path, full_version: &str, major_version: &str) -> Library {
+    let mut library = Library {
+        dynamic: true,
+        libs: vec!["openh264".to_owned()],
+        link_paths: Vec::new(),
+        frameworks: Vec::new(),
+        framework_paths: Vec::new(),
+        include_paths: Vec::new(),
     };
+
+    let prefix_dir_path = out_dir_path.join("prefix");
+    let prefix_include_dir_path = prefix_dir_path.join("include");
+    let prefix_lib_dir_path = prefix_dir_path.join("lib");
+
+    library.include_paths.push(prefix_include_dir_path.clone());
+    library.link_paths.push(prefix_lib_dir_path.clone());
+
+    let done_file_path = prefix_dir_path.join("download_done");
+    if done_file_path.exists() {
+        return library;
+    }
+
+    let (archive_file_name, full_version_so_name, major_version_so_name, short_so_name) =
+        find_prebuilt_library(full_version, major_version);
 
     let url_str = format!(
         "https://github.com/cisco/openh264/releases/download/v{}/{}",
