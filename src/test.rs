@@ -121,6 +121,8 @@ fn encode() {
         }
 
         assert!(out.len() > 0);
+
+        WelsDestroySVCEncoder(encoder);
     }
 }
 
