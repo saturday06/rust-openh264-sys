@@ -13,3 +13,7 @@ Download and build openh264 source.
 
 ### ‘static’ feature
 Link static openh264 library.
+
+## Specify custom openh264 installation prefix
+
+Set environment variable `OPENH264_INCLUDE_PATH` and `OPENH264_LIBRARY_PATH`. Then `$OPENH264_INCLUDE_PATH/wels/codec_api.h` and `$OPENH264_LIBRARY_PATH/libopenh264.so` must be exist.
