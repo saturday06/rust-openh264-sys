@@ -11,6 +11,8 @@ extern crate url;
 use std::env;
 use std::fs::File;
 use std::io::Write;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use libflate::gzip;
 use tar::Archive;
@@ -379,13 +381,29 @@ fn download_library(out_dir_path: &Path, full_version: &str, major_version: &str
     std::fs::create_dir(&prefix_lib_dir_path)
         .expect(&format!("Failed to create {:?}", prefix_lib_dir_path));
     let so_path = prefix_lib_dir_path.join(&full_version_so_name);
-    File::create(&so_path)
-        .expect(&format!(
-            "Failed to create prebuilt binary to {:?}",
-            so_path
-        ))
+    let mut so_file = File::create(&so_path).expect(&format!(
+        "Failed to create prebuilt binary to {:?}",
+        so_path
+    ));
+    so_file
         .write_all(&so_vec)
         .expect(&format!("Failed to save prebuilt binary to {:?}", so_path));
+    #[cfg(unix)]
+    {
+        let metadata = so_file
+            .metadata()
+            .expect(&format!("Failed to read permissions for {:?}", so_path));
+        let mut permissions = metadata.permissions();
+        let mut mode = permissions.mode();
+        mode |= 0o100;
+        if mode & 0o040 != 0 {
+            mode |= 0o010;
+        }
+        if mode & 0o004 != 0 {
+            mode |= 0o001;
+        }
+        permissions.set_mode(mode);
+    }
 
     for &(target_so_name, link_so_name) in [
         (&full_version_so_name, &major_version_so_name),
