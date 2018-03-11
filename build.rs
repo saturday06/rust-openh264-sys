@@ -403,6 +403,10 @@ fn download_library(out_dir_path: &Path, full_version: &str, major_version: &str
             mode |= 0o001;
         }
         permissions.set_mode(mode);
+        so_file.set_permissions(permissions).expect(&format!(
+            "Failed to set permission {} to {:?}",
+            mode, so_path,
+        ));
     }
 
     for &(target_so_name, link_so_name) in [
