@@ -1,6 +1,6 @@
 [package]
 name = "openh264-sys"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Isamu Mogi"]
 build = "build.rs"
 description = "Bindings to OpenH264"
