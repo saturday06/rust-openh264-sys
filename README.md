@@ -1,7 +1,7 @@
 # openh264-sys
 
-[![Build Status](https://travis-ci.org/saturday06/rust-openh264.svg?branch=master)](https://travis-ci.org/saturday06/rust-openh264)
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/saturday06/rust-openh264?branch=master&svg=true)](https://ci.appveyor.com/project/saturday06/rust-openh264)
+[![Build Status](https://travis-ci.org/saturday06/rust-openh264-sys.svg?branch=master)](https://travis-ci.org/saturday06/rust-openh264-sys)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/saturday06/rust-openh264-sys?branch=master&svg=true)](https://ci.appveyor.com/project/saturday06/rust-openh264-sys)
 [![crates.io](https://img.shields.io/crates/v/openh264-sys.svg)](https://crates.io/crates/openh264-sys)
 
 Bindings to OpenH264.

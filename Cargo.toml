@@ -6,7 +6,7 @@ build = "build.rs"
 description = "Bindings to OpenH264"
 license = "BSD-2-Clause"
 readme = "README.md"
-repository = "https://github.com/saturday06/rust-openh264"
+repository = "https://github.com/saturday06/rust-openh264-sys"
 
 [features]
 # Download and build openh264 source
@@ -29,5 +29,5 @@ url = "1"
 bzip2 = "0.3"
 
 [badges]
-travis-ci = { repository = "saturday06/rust-openh264" }
-appveyor = { repository = "saturday06/rust-openh264" }
+travis-ci = { repository = "saturday06/rust-openh264-sys" }
+appveyor = { repository = "saturday06/rust-openh264-sys" }
