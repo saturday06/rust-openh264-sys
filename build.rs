@@ -8,18 +8,18 @@ extern crate reqwest;
 extern crate tar;
 extern crate url;
 
+use bzip2::read::BzDecoder;
+use glob::glob;
+use libflate::gzip;
 use std::env;
 use std::fs::File;
 use std::io::Write;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
-use libflate::gzip;
-use tar::Archive;
-use glob::glob;
 use std::process::Command;
+use tar::Archive;
 use url::Url;
-use bzip2::read::BzDecoder;
 
 struct Library {
     dynamic: bool,
