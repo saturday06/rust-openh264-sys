@@ -11,6 +11,7 @@ extern crate url;
 use bzip2::read::BzDecoder;
 use glob::glob;
 use libflate::gzip;
+use std::collections::HashMap;
 use std::env;
 use std::fs::File;
 use std::io::Write;
@@ -28,6 +29,7 @@ struct Library {
     frameworks: Vec<String>,
     framework_paths: Vec<PathBuf>,
     include_paths: Vec<PathBuf>,
+    defines: HashMap<String, Option<String>>,
 }
 
 fn pkg_config_find_library(version: String, dynamic: bool) -> Option<Library> {
@@ -43,6 +45,7 @@ fn pkg_config_find_library(version: String, dynamic: bool) -> Option<Library> {
             frameworks: pkg_config_library.frameworks,
             framework_paths: pkg_config_library.framework_paths,
             include_paths: pkg_config_library.include_paths,
+            defines: pkg_config_library.defines,
         }),
         _ => None,
     }
@@ -175,6 +178,7 @@ fn build_library(out_dir_path: &Path, version: &str, dynamic: bool) -> Library {
         frameworks: Vec::new(),
         framework_paths: Vec::new(),
         include_paths: Vec::new(),
+        defines: HashMap::new(),
     };
 
     let prefix_dir_path = out_dir_path.join("prefix");
@@ -309,6 +313,7 @@ fn download_library(out_dir_path: &Path, full_version: &str, major_version: &str
         frameworks: Vec::new(),
         framework_paths: Vec::new(),
         include_paths: Vec::new(),
+        defines: HashMap::new(),
     };
 
     let prefix_dir_path = out_dir_path.join("prefix");
@@ -545,6 +550,7 @@ fn find_or_build_library(out_dir_path: &Path) -> Library {
                 frameworks: Vec::new(),
                 framework_paths: Vec::new(),
                 include_paths: vec![PathBuf::from(include_path)],
+                defines: HashMap::new(),
             }
         },
         (Ok(_), _) => panic!("Environment variable `OPENH264_INCLUDE_PATH' exists but `OPENH264_LIBRARY_PATH' doesn't exist. Both variables are required."),
@@ -578,6 +584,14 @@ fn generate_bindings(library: &Library, out_dir_path: &Path) {
                 include_path
             ))
         ));
+    }
+
+    for (define_key, define_value_option) in &library.defines {
+        bindgen_builder = if let Some(define_value) = define_value_option {
+            bindgen_builder.clang_args(&["-D", &format!("{}={}", define_key, define_value)])
+        } else {
+            bindgen_builder.clang_args(&["-D", define_key])
+        }
     }
 
     let bindings_file = out_dir_path.join("bindings.rs");
