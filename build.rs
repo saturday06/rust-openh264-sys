@@ -23,7 +23,7 @@ use tar::Archive;
 use url::Url;
 
 struct Library {
-    dynamic: bool,
+    dynamic: Option<bool>,
     libs: Vec<String>,
     link_paths: Vec<PathBuf>,
     frameworks: Vec<String>,
@@ -32,12 +32,13 @@ struct Library {
     defines: HashMap<String, Option<String>>,
 }
 
-fn pkg_config_find_library(version: String, dynamic: bool) -> Option<Library> {
-    match pkg_config::Config::new()
-        .statik(!dynamic)
-        .atleast_version(&version)
-        .probe("openh264")
-    {
+fn pkg_config_find_library(version: String, dynamic: Option<bool>) -> Option<Library> {
+    let mut config = pkg_config::Config::new();
+    config.atleast_version(&version);
+    if dynamic == Some(false) {
+        config.statik(true);
+    }
+    match config.probe("openh264") {
         Ok(pkg_config_library) => Some(Library {
             dynamic: dynamic,
             libs: pkg_config_library.libs,
@@ -170,7 +171,7 @@ fn make_unix_path(path_str: &str) -> String {
     }
 }
 
-fn build_library(out_dir_path: &Path, version: &str, dynamic: bool) -> Library {
+fn build_library(out_dir_path: &Path, version: &str, dynamic: Option<bool>) -> Library {
     let mut library = Library {
         dynamic: dynamic,
         libs: vec!["openh264".to_owned()],
@@ -210,10 +211,10 @@ fn build_library(out_dir_path: &Path, version: &str, dynamic: bool) -> Library {
     ));
 
     let make = find_make().expect("Unable find `make' or `gmake' command");
-    let make_task = &(if dynamic {
-        "install-shared"
-    } else {
+    let make_task = &(if dynamic == Some(false) {
         "install-static"
+    } else {
+        "install-shared"
     }).to_owned();
     let make_status = Command::new(&make)
         .current_dir(&openh264_src_dir_path_str)
@@ -307,7 +308,7 @@ fn find_prebuilt_library(
 
 fn download_library(out_dir_path: &Path, full_version: &str, major_version: &str) -> Library {
     let mut library = Library {
-        dynamic: true,
+        dynamic: Some(true),
         libs: vec!["openh264".to_owned()],
         link_paths: Vec::new(),
         frameworks: Vec::new(),
@@ -533,7 +534,12 @@ fn download_library(out_dir_path: &Path, full_version: &str, major_version: &str
 fn find_or_build_library(out_dir_path: &Path) -> Library {
     let full_version = "1.7.0";
     let major_version = "4";
-    let dynamic = !cfg!(feature = "static");
+    let dynamic = if cfg!(feature = "static") {
+        Some(false)
+    } else {
+        None
+    };
+
     if cfg!(feature = "build") {
         if cfg!(windows) {
             panic!("feature `build' is currently unimplemented for Windows");
@@ -561,8 +567,8 @@ fn find_or_build_library(out_dir_path: &Path) -> Library {
     match pkg_config_find_library(full_version.to_owned(), dynamic) {
         Some(library) => library,
         None => {
-            if !dynamic {
-                panic!("Unable to find openh264 library via pkg-config")
+            if dynamic == Some(false) {
+                panic!("Unable to find openh264 library")
             }
 
             let library = download_library(out_dir_path, full_version, major_version);
@@ -630,10 +636,10 @@ fn print_linker_flags(library: &Library) {
     }
 
     for lib in &library.libs {
-        if library.dynamic {
-            println!("cargo:rustc-link-lib=dylib={}", lib);
-        } else {
+        if library.dynamic == Some(false) {
             println!("cargo:rustc-link-lib=static={}", lib);
+        } else {
+            println!("cargo:rustc-link-lib=dylib={}", lib);
         }
     }
 }
