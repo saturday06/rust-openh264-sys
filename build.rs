@@ -561,11 +561,13 @@ fn find_or_build_library(out_dir_path: &Path) -> Library {
     match pkg_config_find_library(full_version.to_owned(), dynamic) {
         Some(library) => library,
         None => {
-            if dynamic {
-                download_library(out_dir_path, full_version, major_version)
-            } else {
+            if !dynamic {
                 panic!("Unable to find openh264 library")
             }
+
+            let library = download_library(out_dir_path, full_version, major_version);
+            print_linker_flags(&library);
+            library
         }
     }
 }
@@ -641,5 +643,4 @@ fn main() {
     let out_dir_path = Path::new(&out_dir);
     let library = find_or_build_library(&out_dir_path);
     generate_bindings(&library, &out_dir_path);
-    print_linker_flags(&library);
 }
