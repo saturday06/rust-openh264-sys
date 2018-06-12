@@ -562,7 +562,7 @@ fn find_or_build_library(out_dir_path: &Path) -> Library {
         Some(library) => library,
         None => {
             if !dynamic {
-                panic!("Unable to find openh264 library")
+                panic!("Unable to find openh264 library via pkg-config")
             }
 
             let library = download_library(out_dir_path, full_version, major_version);
